@@ -2,7 +2,7 @@
 
 > 任何 session 在 outputs/ 下启动时必读。完整 SOP 在同目录 `WORKFLOW.md`, 本文件是**铁律 + 坑点速查**, 用于避开已踩过的坑。
 >
-> **当前产品架构 (2026-09)**: 桌面 GUI 使用 Gladia + MiniMax/GLM/Qwen 流式翻译；Web 使用 Gladia + MiniMax + Vercel Blob 可恢复任务。`outputs/work/run_all_win.py auto` 是仍保留的历史批处理流水线，继续使用 Gladia en-only + DeepL；不要把它与桌面/Web 产品路径混为一谈。旧 `gladia_with_translation.py` 的 Gladia translation 池已废弃 (quota 触顶, 见坑 AJ).
+> **当前产品架构 (2026-10)**: 本仓库只包含 Windows 桌面 GUI，使用 Gladia + MiniMax/GLM/Qwen 流式翻译。`outputs/work/run_all_win.py auto` 是仍保留的历史批处理流水线，继续使用 Gladia en-only + DeepL；不要把它与当前桌面产品路径混为一谈。旧 `gladia_with_translation.py` 的 Gladia translation 池已废弃 (quota 触顶, 见坑 AJ).
 >
 > **流程图**: 见 `WORKFLOW.md` 第 0 节 Mermaid 流程图 (主流程 + 旧架构对比)。
 

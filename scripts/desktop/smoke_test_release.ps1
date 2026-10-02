@@ -31,7 +31,7 @@ function Invoke-PackagedTest([string[]]$Arguments, [int]$TimeoutSeconds = 30) {
 }
 
 try {
-  Invoke-PackagedTest @('--self-test', $selfTestPath)
+  Invoke-PackagedTest @('--package-self-test', $selfTestPath)
   $diagnostics = Get-Content -LiteralPath $selfTestPath -Raw | ConvertFrom-Json
   $expectedConfigRoot = (Join-Path (Split-Path -Parent $exe) 'config')
   if ($diagnostics.config_root -ne $expectedConfigRoot) {
@@ -40,9 +40,6 @@ try {
   $expectedJobsRoot = (Join-Path (Split-Path -Parent $exe) 'outputs\work\jobs')
   if ($diagnostics.jobs_root -ne $expectedJobsRoot) {
     throw "Packaged jobs path mismatch: expected $expectedJobsRoot, got $($diagnostics.jobs_root)"
-  }
-  if ($diagnostics.gladia_key_count -lt 1 -or -not $diagnostics.minimax_key_present) {
-    throw 'Packaged API keys are not readable from the shared config directory.'
   }
   $failedChecks = @($diagnostics.environment | Where-Object { -not $_.ok })
   if ($failedChecks.Count) {

@@ -20,6 +20,11 @@ $releaseConfigRoot = Join-Path $releaseAppRoot 'config'
 $releaseInternalRoot = Join-Path $releaseAppRoot '_internal'
 $releaseQtBin = Join-Path $releaseInternalRoot 'PyQt6\Qt6\bin'
 
+& $python (Join-Path $PSScriptRoot 'write_version_info.py') --output $versionInfo
+if ($LASTEXITCODE -ne 0) {
+  throw "Version metadata generation failed (exit code $LASTEXITCODE)."
+}
+
 # Keep unrelated tools (for example Poppler) from influencing PyInstaller's
 # binary dependency discovery through the parent process PATH.
 $pythonDir = Split-Path -Parent $python

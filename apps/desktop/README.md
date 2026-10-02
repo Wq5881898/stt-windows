@@ -1,11 +1,11 @@
 # Desktop App
 
-`apps/desktop/main.py` is both the PyQt6 product entry point and the current desktop implementation. The old `app/` package is only a compatibility layer.
+`apps/desktop/main.py` is both the PyQt6 product entry point and the current desktop implementation.
 
 ## Start From Source
 
 ```powershell
-cd D:\projectQ\video2text
+cd D:\projectQ\stt-windows
 run_gui.bat
 ```
 
@@ -68,7 +68,7 @@ Environment variables such as `MINIMAX_API_KEY`, `GLM_BASE_URL`, or `QWEN_MODEL`
 
 | Runtime | Config | Job cache |
 |---|---|---|
-| Python source | `D:\projectQ\video2text\config\` | `D:\projectQ\video2text\outputs\work\jobs\` |
+| Python source | `<repo>\config\` | `<repo>\outputs\work\jobs\` |
 | Packaged EXE | `<exe-folder>\config\` | `<exe-folder>\outputs\work\jobs\` |
 
 The packaged distribution must keep `video2text.exe`, `_internal/`, `config/`, and `outputs/` together.
@@ -76,7 +76,7 @@ The packaged distribution must keep `video2text.exe`, `_internal/`, `config/`, a
 ## Build And Release Checks
 
 ```powershell
-cd D:\projectQ\video2text
+cd D:\projectQ\stt-windows
 powershell -ExecutionPolicy Bypass -File scripts\desktop\build_release.ps1
 ```
 
@@ -96,4 +96,4 @@ These build checks do not submit paid transcription jobs. Real Gladia and LLM te
 
 # 桌面端说明
 
-当前桌面端的真实入口与实现都是 `apps/desktop/main.py`，旧 `app/` 仅为兼容层。桌面端已支持三种 LLM 翻译模型、流式串行分批、8,000 秒长音频自动切分、断点续跑和成功后中间音频清理。完整产品状态见 [`../../docs/CURRENT_STATE_ZH.md`](../../docs/CURRENT_STATE_ZH.md)。
+当前桌面端的真实入口与实现都是 `apps/desktop/main.py`。桌面端已支持三种 LLM 翻译模型、流式串行分批、8,000 秒长音频自动切分、断点续跑和成功后中间音频清理。完整产品状态见 [`../../docs/CURRENT_STATE_ZH.md`](../../docs/CURRENT_STATE_ZH.md)。

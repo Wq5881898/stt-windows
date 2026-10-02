@@ -1,4 +1,4 @@
-# video2text v0.1.0
+# stt-windows v0.1.0
 
 首个 GitHub Windows 正式发布版本。
 

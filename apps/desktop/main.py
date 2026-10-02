@@ -1733,14 +1733,20 @@ def main() -> int:
         if srt_path.read_text(encoding="utf-8").count(" --> ") != len(en_segments):
             raise RuntimeError("Packaged SRT cue count mismatch")
         return 0
-    if "--self-test" in sys.argv:
-        index = sys.argv.index("--self-test")
+    self_test_flag = next(
+        (flag for flag in ("--package-self-test", "--self-test") if flag in sys.argv),
+        None,
+    )
+    if self_test_flag:
+        index = sys.argv.index(self_test_flag)
         if index + 1 >= len(sys.argv):
             return 2
+        package_test = self_test_flag == "--package-self-test"
         checks = collect_environment_checks(
-            needs_translation=True,
+            needs_translation=not package_test,
             needs_video_tools=True,
             translation_provider="minimax",
+            require_gladia=not package_test,
         )
         translation_configs = {
             provider: {
@@ -1768,9 +1774,10 @@ def main() -> int:
             ],
         }
         Path(sys.argv[index + 1]).write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        return 0 if payload["gladia_key_count"] and payload["minimax_key_present"] and all(
-            check["ok"] for check in payload["environment"]
-        ) else 1
+        checks_ok = all(check["ok"] for check in payload["environment"])
+        if package_test:
+            return 0 if checks_ok else 1
+        return 0 if payload["gladia_key_count"] and payload["minimax_key_present"] and checks_ok else 1
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

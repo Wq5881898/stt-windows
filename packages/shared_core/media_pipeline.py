@@ -122,6 +122,7 @@ def collect_environment_checks(
     needs_translation: bool,
     needs_video_tools: bool,
     translation_provider: str = "minimax",
+    require_gladia: bool = True,
 ) -> list[EnvironmentCheck]:
     checks: list[EnvironmentCheck] = []
 
@@ -140,15 +141,20 @@ def collect_environment_checks(
         if missing_name == "ffmpeg":
             checks.append(EnvironmentCheck("ffprobe", False, "Blocked because ffmpeg/ffprobe path is incomplete"))
 
-    gladia_env = bool(os.environ.get("GLADIA_API_KEY", "").strip())
-    gladia_file = _has_nonempty_file(GLADIA_KEYS_PATH)
-    checks.append(
-        EnvironmentCheck(
-            "gladia",
-            gladia_env or gladia_file,
-            "GLADIA_API_KEY env" if gladia_env else (str(GLADIA_KEYS_PATH) if gladia_file else f"Missing {GLADIA_KEYS_PATH}"),
+    if require_gladia:
+        gladia_env = bool(os.environ.get("GLADIA_API_KEY", "").strip())
+        gladia_file = _has_nonempty_file(GLADIA_KEYS_PATH)
+        checks.append(
+            EnvironmentCheck(
+                "gladia",
+                gladia_env or gladia_file,
+                "GLADIA_API_KEY env"
+                if gladia_env
+                else (str(GLADIA_KEYS_PATH) if gladia_file else f"Missing {GLADIA_KEYS_PATH}"),
+            )
         )
-    )
+    else:
+        checks.append(EnvironmentCheck("gladia", True, "Not required for package structure test"))
 
     provider = normalize_translation_provider(translation_provider)
     provider_label = translation_provider_label(provider)
