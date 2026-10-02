@@ -1,0 +1,3 @@
+# One Gladia API key per line.
+# Copy this file to gladia_keys.txt and replace the value below locally.
+gladia_api_key_goes_here
