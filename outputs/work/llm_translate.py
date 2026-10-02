@@ -37,7 +37,7 @@ PROVIDERS = {
         "label": "GLM",
         "config_file": "glm.json",
         "env_prefix": "GLM",
-        "base_url": "https://api.z.ai/api/coding/paas/v4",
+        "base_url": "https://api.z.ai/api/paas/v4",
         "model": "glm-5.3-flash",
     },
     "qwen": {

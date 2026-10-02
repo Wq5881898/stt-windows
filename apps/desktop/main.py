@@ -64,6 +64,7 @@ from packages.shared_core import (
     check_translation_key,
     mask_key,
     read_gladia_keys,
+    read_translation_config,
     read_translation_key,
     translation_provider_label,
     write_gladia_keys,
@@ -229,7 +230,7 @@ class KeyCheckWorker(QObject):
     result_ready = pyqtSignal(str, int, object)
     finished = pyqtSignal()
 
-    def __init__(self, gladia_keys: list[str], translation_keys: dict[str, str]) -> None:
+    def __init__(self, gladia_keys: list[str], translation_keys: dict[str, dict[str, str]]) -> None:
         super().__init__()
         self.gladia_keys = gladia_keys
         self.translation_keys = translation_keys
@@ -238,9 +239,11 @@ class KeyCheckWorker(QObject):
     def run(self) -> None:
         for index, key in enumerate(self.gladia_keys):
             self.result_ready.emit("gladia", index, check_gladia_key(key))
-        for provider, key in self.translation_keys.items():
-            if key:
-                self.result_ready.emit(provider, 0, check_translation_key(provider, key))
+        for provider, config in self.translation_keys.items():
+            if config["api_key"]:
+                self.result_ready.emit(provider, 0, check_translation_key(
+                    provider, config["api_key"], base_url=config["base_url"], model=config["model"],
+                ))
         self.finished.emit()
 
 
@@ -282,6 +285,8 @@ class KeyManagementDialog(QDialog):
         translation_layout = QVBoxLayout(translation_group)
         self.translation_tabs = QTabWidget()
         self.translation_edits: dict[str, QLineEdit] = {}
+        self.translation_urls: dict[str, QLineEdit] = {}
+        self.translation_models: dict[str, QLineEdit] = {}
         self.translation_statuses: dict[str, QLabel] = {}
         for provider in TRANSLATION_PROVIDERS:
             page = QWidget()
@@ -299,10 +304,18 @@ class KeyManagementDialog(QDialog):
             key_row.addWidget(key_edit)
             key_row.addWidget(show_key)
             page_layout.addLayout(key_row)
+            page_layout.addWidget(QLabel("Base URL (without /chat/completions)"))
+            url_edit = QLineEdit()
+            page_layout.addWidget(url_edit)
+            page_layout.addWidget(QLabel("Model"))
+            model_edit = QLineEdit()
+            page_layout.addWidget(model_edit)
             status_label = QLabel("Not tested")
             status_label.setWordWrap(True)
             page_layout.addWidget(status_label)
             self.translation_edits[provider] = key_edit
+            self.translation_urls[provider] = url_edit
+            self.translation_models[provider] = model_edit
             self.translation_statuses[provider] = status_label
             self.translation_tabs.addTab(page, translation_provider_label(provider))
         translation_layout.addWidget(self.translation_tabs)
@@ -326,7 +339,10 @@ class KeyManagementDialog(QDialog):
         for key in read_gladia_keys(GLADIA_KEYS_PATH):
             self._append_gladia_key(key)
         for provider, key_edit in self.translation_edits.items():
-            key_edit.setText(read_translation_key(provider))
+            config = read_translation_config(provider)
+            key_edit.setText(config["api_key"])
+            self.translation_urls[provider].setText(config["base_url"])
+            self.translation_models[provider].setText(config["model"])
 
     def _append_gladia_key(self, key: str) -> None:
         row = self.gladia_table.rowCount()
@@ -364,7 +380,10 @@ class KeyManagementDialog(QDialog):
         try:
             write_gladia_keys(GLADIA_KEYS_PATH, self._gladia_keys())
             for provider, key_edit in self.translation_edits.items():
-                write_translation_key(provider, key_edit.text())
+                write_translation_key(
+                    provider, key_edit.text(), base_url=self.translation_urls[provider].text(),
+                    model=self.translation_models[provider].text(),
+                )
         except OSError as exc:
             QMessageBox.critical(self, "Save Failed", str(exc))
             return
@@ -375,10 +394,14 @@ class KeyManagementDialog(QDialog):
             return
         keys = self._gladia_keys()
         translation_keys = {
-            provider: key_edit.text().strip()
+            provider: {
+                "api_key": key_edit.text().strip(),
+                "base_url": self.translation_urls[provider].text().strip(),
+                "model": self.translation_models[provider].text().strip(),
+            }
             for provider, key_edit in self.translation_edits.items()
         }
-        if not keys and not any(translation_keys.values()):
+        if not keys and not any(config["api_key"] for config in translation_keys.values()):
             QMessageBox.information(self, "No Keys", "Add at least one key before testing.")
             return
         self.test_button.setEnabled(False)
@@ -1643,9 +1666,11 @@ def main() -> int:
             return 2
         app = QApplication(sys.argv)
         window = MainWindow()
+        key_dialog = KeyManagementDialog(window)
         app.processEvents()
         payload = {"title": window.windowTitle(), "frame_accepts_drops": window.drop_frame.acceptDrops(),
-                   "queue_accepts_drops": window.file_list.acceptDrops()}
+                   "queue_accepts_drops": window.file_list.acceptDrops(),
+                   "translation_connection_fields": sorted(set(key_dialog.translation_urls) & set(key_dialog.translation_models))}
         Path(sys.argv[index + 1]).write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return 0 if payload["title"].startswith(APP_NAME) and payload["frame_accepts_drops"] and payload["queue_accepts_drops"] else 1
     if "--pipeline-smoke-test" in sys.argv:

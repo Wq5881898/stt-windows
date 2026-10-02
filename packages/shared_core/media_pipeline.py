@@ -30,6 +30,7 @@ from .key_management import (
     application_root,
     normalize_translation_provider,
     read_translation_config,
+    read_gladia_keys,
     read_translation_key,
     translation_config_path,
     translation_provider_label,
@@ -143,7 +144,7 @@ def collect_environment_checks(
 
     if require_gladia:
         gladia_env = bool(os.environ.get("GLADIA_API_KEY", "").strip())
-        gladia_file = _has_nonempty_file(GLADIA_KEYS_PATH)
+        gladia_file = bool(read_gladia_keys(GLADIA_KEYS_PATH))
         checks.append(
             EnvironmentCheck(
                 "gladia",

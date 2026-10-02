@@ -5,15 +5,18 @@
 ```powershell
 git clone https://github.com/Wq5881898/stt-windows.git
 cd stt-windows
-run_gui.bat
+powershell -ExecutionPolicy Bypass -File scripts\desktop\setup.ps1
+.\run_gui.bat
 ```
 
 ## Build
 
-Use the project Python environment that contains PyQt6 and PyInstaller:
+Use the local `.venv` created by setup, or pass `-PythonExe`. Put ffmpeg and ffprobe on PATH or in `tools/ffmpeg/bin`, or supply explicit paths:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\desktop\build_release.ps1
+# Explicit overrides when tools are not on PATH:
+# powershell -ExecutionPolicy Bypass -File scripts\desktop\build_release.ps1 -PythonExe C:\Python312\python.exe -FfmpegPath C:\ffmpeg\bin\ffmpeg.exe -FfprobePath C:\ffmpeg\bin\ffprobe.exe
 ```
 
 The runnable one-folder build is written under:
@@ -37,6 +40,8 @@ The script:
 - removes runtime jobs and logs;
 - scans staged files for credentials;
 - creates a versioned ZIP and SHA256 file under `release\artifacts\`.
+
+The public ZIP is named `stt-windows-x64-vVERSION.zip`, contains `video2text/video2text.exe`, and includes Chinese/English README and key guides. The EXE stays in its complete folder. A tag must point at the commit used to build its release.
 
 Never upload `release\video2text\` directly. Publish only the sanitized artifacts to [stt-windows Releases](https://github.com/Wq5881898/stt-windows/releases).
 

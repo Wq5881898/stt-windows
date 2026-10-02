@@ -1,0 +1,5 @@
+{
+  "base_url": "https://api.z.ai/api/paas/v4",
+  "api_key": "",
+  "model": "glm-5.3-flash"
+}

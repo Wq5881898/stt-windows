@@ -72,6 +72,9 @@ try {
   if ($gui.title -notlike 'video2text *' -or -not $gui.frame_accepts_drops -or -not $gui.queue_accepts_drops) {
     throw "Packaged GUI initialization/drop-target test failed: $($gui | ConvertTo-Json -Compress)"
   }
+  if (($gui.translation_connection_fields -join ',') -ne 'glm,minimax,qwen') {
+    throw 'Packaged key dialog is missing translation endpoint/model fields.'
+  }
   Write-Host "Packaged GUI initialization/drop-target test passed: $($gui.title)"
 }
 finally {

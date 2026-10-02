@@ -1,9 +1,30 @@
-param([string]$ReleaseRoot)
+param(
+  [string]$ReleaseRoot,
+  [string]$PythonExe,
+  [string]$FfmpegPath,
+  [string]$FfprobePath
+)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $root
 
-$python = 'D:\projectQ\.venv\Scripts\python.exe'
+if (-not $PythonExe) {
+  $localPython = Join-Path $root '.venv\Scripts\python.exe'
+  $sharedPython = Join-Path (Split-Path -Parent $root) '.venv\Scripts\python.exe'
+  if (Test-Path -LiteralPath $localPython) { $PythonExe = $localPython }
+  elseif (Test-Path -LiteralPath $sharedPython) { $PythonExe = $sharedPython }
+  else { $PythonExe = (Get-Command python -ErrorAction Stop).Source }
+}
+$python = (Get-Command $PythonExe -ErrorAction Stop).Source
+
+function Resolve-MediaTool([string]$Name, [string]$Override) {
+  if ($Override) { return (Get-Item -LiteralPath $Override -ErrorAction Stop).FullName }
+  $localTool = Join-Path $root "tools\ffmpeg\bin\$Name.exe"
+  if (Test-Path -LiteralPath $localTool) { return $localTool }
+  return (Get-Command $Name -ErrorAction Stop).Source
+}
+$FfmpegPath = Resolve-MediaTool 'ffmpeg' $FfmpegPath
+$FfprobePath = Resolve-MediaTool 'ffprobe' $FfprobePath
 $icon = Join-Path $root 'assets\video2text.ico'
 $versionInfo = Join-Path $root 'build\version_info.txt'
 $releaseBase = [System.IO.Path]::GetFullPath((Join-Path $root 'release'))
@@ -56,8 +77,8 @@ if (Test-Path $releaseRoot) { Remove-Item -LiteralPath $releaseRoot -Recurse -Fo
   --workpath (Join-Path $root 'build\pyinstaller') `
   --specpath (Join-Path $root 'build') `
   --add-data "$icon;assets" `
-  --add-data "D:\program\ffmpeg\bin\ffmpeg.exe;bin" `
-  --add-data "D:\program\ffmpeg\bin\ffprobe.exe;bin" `
+  --add-data "$FfmpegPath;bin" `
+  --add-data "$FfprobePath;bin" `
   apps\desktop\main.py
 
 if ($LASTEXITCODE -ne 0) {
@@ -69,7 +90,7 @@ New-Item -ItemType Directory -Force -Path $releaseConfigRoot | Out-Null
 Get-ChildItem -LiteralPath $workModules -File -Filter '*.py' | ForEach-Object {
   Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $releaseWorkRoot $_.Name) -Force
 }
-foreach ($name in @('gladia_keys.txt', 'minimax.json', 'glm.json', 'qwen.json', 'gladia_keys.example.txt', 'minimax.example.json')) {
+foreach ($name in @('gladia_keys.txt', 'minimax.json', 'glm.json', 'qwen.json', 'gladia_keys.example.txt', 'minimax.example.json', 'glm.example.json', 'qwen.example.json')) {
   $source = Join-Path $configRoot $name
   if (Test-Path -LiteralPath $source) {
     Copy-Item -LiteralPath $source -Destination (Join-Path $releaseConfigRoot $name) -Force

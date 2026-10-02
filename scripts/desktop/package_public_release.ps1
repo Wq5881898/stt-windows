@@ -76,7 +76,7 @@ Set-Content -LiteralPath (Join-Path $publicConfig 'gladia_keys.txt') -Encoding u
   model = 'MiniMax-M3'
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $publicConfig 'minimax.json') -Encoding utf8
 @{
-  base_url = 'https://api.z.ai/api/coding/paas/v4'
+  base_url = 'https://api.z.ai/api/paas/v4'
   api_key = ''
   model = 'glm-5.3-flash'
 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $publicConfig 'glm.json') -Encoding utf8
@@ -93,17 +93,33 @@ Get-ChildItem -LiteralPath (Join-Path $stagingRoot 'outputs\work') -File -ErrorA
   Remove-Item -Force
 
 $firstRead = @'
-video2text Windows release
+stt-windows / video2text Windows release
 
 1. Keep this whole folder together. Do not move video2text.exe by itself.
 2. Run video2text.exe.
 3. Open API Key Management and add at least one Gladia key.
 4. Add a MiniMax, GLM, or Qwen key only when Chinese translation is needed.
-5. Final TXT/SRT files are not removed by Cleanup Cache.
+5. Click Save, choose TXT or SRT, add a recording, and click Start Processing.
+6. Read README.md (Chinese) or README_EN.md (English) for key links and troubleshooting.
+7. Final TXT/SRT files are not removed by Cleanup Cache.
+
+Gladia keys: https://app.gladia.io/
+MiniMax keys: https://platform.minimax.cn/ or https://platform.minimax.io/
+GLM keys: https://z.ai/manage-apikey/apikey-list
+Qwen: ask the administrator of your OpenAI-compatible Qwen endpoint.
 
 This public package intentionally contains no API keys.
 '@
 Set-Content -LiteralPath (Join-Path $stagingRoot 'README-FIRST.txt') -Value $firstRead -Encoding utf8
+foreach ($name in @('README.md', 'README_EN.md')) {
+  Copy-Item -LiteralPath (Join-Path $repoRoot $name) -Destination (Join-Path $stagingRoot $name)
+}
+New-Item -ItemType Directory -Force -Path (Join-Path $stagingRoot 'docs') | Out-Null
+foreach ($name in @('API_KEYS_ZH.md', 'API_KEYS_EN.md', 'PACKAGING_AND_DEPLOY.md', 'RELEASE_NOTES_v0.1.1.md')) {
+  Copy-Item -LiteralPath (Join-Path $repoRoot "docs\$name") -Destination (Join-Path $stagingRoot "docs\$name")
+}
+
+& (Join-Path $PSScriptRoot 'smoke_test_release.ps1') -ExePath (Join-Path $stagingRoot 'video2text.exe')
 
 $textExtensions = @('.txt', '.json', '.py', '.md', '.ini', '.cfg', '.yaml', '.yml', '.env', '.log')
 if ($secretValues.Count) {
@@ -119,7 +135,7 @@ if ($secretValues.Count) {
 }
 
 New-Item -ItemType Directory -Force -Path $ArtifactRoot | Out-Null
-$zipName = "video2text-windows-x64-v$Version.zip"
+$zipName = "stt-windows-x64-v$Version.zip"
 $zipPath = Join-Path $ArtifactRoot $zipName
 $hashPath = "$zipPath.sha256"
 Remove-Item -LiteralPath $zipPath, $hashPath -Force -ErrorAction SilentlyContinue

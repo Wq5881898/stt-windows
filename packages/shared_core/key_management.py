@@ -42,7 +42,7 @@ TRANSLATION_PROVIDERS = {
         "label": "GLM",
         "config_path": GLM_CONFIG_PATH,
         "env_prefix": "GLM",
-        "base_url": "https://api.z.ai/api/coding/paas/v4",
+        "base_url": "https://api.z.ai/api/paas/v4",
         "model": "glm-5.3-flash",
     },
     "qwen": {
@@ -179,11 +179,18 @@ def write_minimax_key(path: Path, key: str) -> None:
     write_translation_key("minimax", key, path)
 
 
-def write_translation_key(provider: str, key: str, path: Path | None = None) -> None:
+def write_translation_key(
+    provider: str, key: str, path: Path | None = None, *,
+    base_url: str | None = None, model: str | None = None,
+) -> None:
     normalized = normalize_translation_provider(provider)
     target = path or translation_config_path(normalized)
     config = read_translation_config(normalized, target)
     config["api_key"] = key.strip()
+    if base_url is not None:
+        config["base_url"] = base_url.strip().rstrip("/")
+    if model is not None:
+        config["model"] = model.strip()
     _atomic_write(target, json.dumps(config, ensure_ascii=False, indent=2) + "\n")
 
 
@@ -271,9 +278,16 @@ def check_deepl_key(key: str, timeout: int = 15) -> KeyCheckResult:
     return KeyCheckResult(False, "Unknown", f"DeepL returned HTTP {status}.")
 
 
-def check_translation_key(provider: str, key: str, timeout: int = 30) -> KeyCheckResult:
+def check_translation_key(
+    provider: str, key: str, timeout: int = 30, *,
+    base_url: str | None = None, model: str | None = None,
+) -> KeyCheckResult:
     normalized = normalize_translation_provider(provider)
     config = read_translation_config(normalized)
+    if base_url is not None:
+        config["base_url"] = base_url.strip().rstrip("/")
+    if model is not None:
+        config["model"] = model.strip()
     label = translation_provider_label(normalized)
     if not config["base_url"] or not config["model"]:
         return KeyCheckResult(False, "Not configured", f"Set base_url and model in {translation_config_path(normalized)}.")

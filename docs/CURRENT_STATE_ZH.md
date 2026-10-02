@@ -2,6 +2,8 @@
 
 > 基线日期：2026-10-02
 
+安装与使用以 [中文 README](../README.md) / [English README](../README_EN.md) 为准。`v0.1.1` 是拆分后首个公开 EXE Release；新增中英 Key 教程、可编辑的翻译 Base URL/Model、本地 `.venv` 安装脚本与可移植构建工具路径。
+
 ## 已实现
 
 - Windows PyQt6 多文件和文件夹队列，支持拖拽、失败重试和任务恢复。
